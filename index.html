@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Centang 30 Hari</title>
+<style>
+:root{--bg:#f6f5f1;--card:#fff;--text:#1f2420;--muted:#6b726c;--line:#e3e1d9;--accent:#2f7d5b;--accent-bg:#dff0e7;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#151816;--card:#1e2220;--text:#ecefe9;--muted:#9aa39c;--line:#2d322f;--accent:#5fc596;--accent-bg:#23382e;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#151816;--card:#1e2220;--text:#ecefe9;--muted:#9aa39c;--line:#2d322f;--accent:#5fc596;--accent-bg:#23382e;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;line-height:1.4}
+main{max-width:520px;margin:0 auto;padding:16px}
+h1{font-size:1.4rem;margin:8px 0 4px}
+.sub{color:var(--muted);font-size:.9rem;margin:0 0 14px}
+.sum{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:16px}
+.bar{height:10px;background:var(--line);border-radius:6px;overflow:hidden;margin:8px 0}
+.bar i{display:block;height:100%;width:0;background:var(--accent);transition:width .3s}
+.stats{display:flex;justify-content:space-between;font-size:.85rem;color:var(--muted)}
+.wk{margin-bottom:18px}
+.wk h2{font-size:1.05rem;margin:0}
+.tgt{font-size:.82rem;color:var(--muted);margin:2px 0 8px}
+.day{display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:8px 10px;margin-bottom:6px}
+.day.done{border-color:var(--accent);background:var(--accent-bg)}
+.dn{width:54px;font-weight:600;font-size:.9rem}
+.chips{display:flex;gap:6px;flex:1}
+.chip{flex:1;border:1px solid var(--line);background:transparent;color:var(--muted);border-radius:10px;padding:10px 2px;font-size:.8rem;cursor:pointer;font-family:inherit}
+.chip.on{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+.reset{display:block;margin:20px auto 30px;background:none;border:1px solid var(--line);color:var(--muted);border-radius:10px;padding:10px 16px;font-family:inherit;cursor:pointer}
+.tip{font-size:.82rem;color:var(--muted);text-align:center}
+</style>
+</head>
+<body>
+<main>
+<h1>Centang 30 Hari</h1>
+<p class="sub">Tiga kebiasaan inti. Bolong sehari? Lanjut besok, jangan ulang dari nol.</p>
+<div class="sum">
+<div class="stats"><span id="pct">0%</span><span id="cnt">0 / 90 centang</span></div>
+<div class="bar"><i id="fill"></i></div>
+<div class="stats"><span id="streak">Hari lengkap: 0</span><span>Target: 3 per hari</span></div>
+</div>
+<div id="list"></div>
+<p class="tip">Fokus = sesi tanpa HP · Baca = buku fisik · Tidur = jam konsisten</p>
+<button class="reset" id="reset">Reset semua</button>
+</main>
+<script>
+var WEEKS=[
+{t:"Minggu 1: Fondasi",g:"Fokus 1×25 mnt · Baca 5 hal · Tidur meleset maks 1 jam",from:1,to:7},
+{t:"Minggu 2: Naikkan sedikit",g:"Fokus 2×25 mnt · Baca 10 hal · Tidur meleset maks 30 mnt",from:8,to:14},
+{t:"Minggu 3: Perkuat",g:"Fokus 3×25 mnt · Baca 10–15 hal + ringkasan · Tidur konsisten",from:15,to:21},
+{t:"Minggu 4: Kunci kebiasaan",g:"Fokus 2×45 mnt · Baca 15 hal + ceritakan · Tidur konsisten",from:22,to:30}
+];
+var NAMES=["Fokus","Baca","Tidur"];
+var KEY="centang30_v1";
+var state={};
+try{var s=localStorage.getItem(KEY);if(s)state=JSON.parse(s)||{};}catch(e){state={};}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){}}
+function render(){
+var list=document.getElementById("list");list.innerHTML="";
+var total=0,full=0;
+WEEKS.forEach(function(w){
+var sec=document.createElement("section");sec.className="wk";
+sec.innerHTML="<h2>"+w.t+"</h2><p class=\"tgt\">"+w.g+"</p>";
+for(var d=w.from;d<=w.to;d++){
+var row=document.createElement("div");row.className="day";
+var n=0;
+var chips=document.createElement("div");chips.className="chips";
+for(var h=0;h<3;h++){
+(function(d,h){
+var k=d+"-"+h;var on=!!state[k];if(on){n++;total++;}
+var b=document.createElement("button");b.className="chip"+(on?" on":"");
+b.textContent=(on?"✓ ":"")+NAMES[h];
+b.onclick=function(){if(state[k])delete state[k];else state[k]=1;save();render();};
+chips.appendChild(b);
+})(d,h);
+}
+if(n===3){full++;row.className+=" done";}
+var l=document.createElement("div");l.className="dn";l.textContent="Hari "+d;
+row.appendChild(l);row.appendChild(chips);sec.appendChild(row);
+}
+list.appendChild(sec);
+});
+var pct=Math.round(total/90*100);
+document.getElementById("pct").textContent=pct+"%";
+document.getElementById("cnt").textContent=total+" / 90 centang";
+document.getElementById("fill").style.width=pct+"%";
+document.getElementById("streak").textContent="Hari lengkap: "+full;
+}
+document.getElementById("reset").onclick=function(){if(confirm("Hapus semua centang?")){state={};save();render();}};
+render();
+</script>
+</body>
+</html>
